@@ -331,7 +331,9 @@ CGFloat SVProgressHUDRingThickness = 6;
     CGRect orientationFrame = [UIScreen mainScreen].bounds;
     CGRect statusBarFrame = [UIApplication sharedApplication].statusBarFrame;
     
-    if(UIInterfaceOrientationIsLandscape(orientation)) {
+    BOOL versionLowerThaniOS8 = ([[[UIDevice currentDevice] systemVersion] compare:@"8.0" options:NSNumericSearch] == NSOrderedAscending);
+    
+    if(versionLowerThaniOS8 && UIInterfaceOrientationIsLandscape(orientation)) {
         float temp = orientationFrame.size.width;
         orientationFrame.size.width = orientationFrame.size.height;
         orientationFrame.size.height = temp;
@@ -353,36 +355,40 @@ CGFloat SVProgressHUDRingThickness = 6;
     CGPoint newCenter;
     CGFloat rotateAngle;
     
-    switch (orientation) { 
+    switch (orientation) {
         case UIInterfaceOrientationPortraitUpsideDown:
-            rotateAngle = M_PI; 
+            rotateAngle = M_PI;
             newCenter = CGPointMake(posX, orientationFrame.size.height-posY);
             break;
         case UIInterfaceOrientationLandscapeLeft:
-            rotateAngle = -M_PI/2.0f;
-            newCenter = CGPointMake(posY, posX);
-            break;
+            if (versionLowerThaniOS8) {
+                rotateAngle = -M_PI/2.0f;
+                newCenter = CGPointMake(posY, posX);
+                break;
+            }
+            // else fallthrough
         case UIInterfaceOrientationLandscapeRight:
-            rotateAngle = M_PI/2.0f;
-            newCenter = CGPointMake(orientationFrame.size.height-posY, posX);
-            break;
+            if (versionLowerThaniOS8) {
+                rotateAngle = M_PI/2.0f;
+                newCenter = CGPointMake(orientationFrame.size.height-posY, posX);
+                break;
+            }
+            // else fallthrough
         default: // as UIInterfaceOrientationPortrait
             rotateAngle = 0.0;
             newCenter = CGPointMake(posX, posY);
             break;
-    } 
+    }
     
     if(notification) {
         SVProgressHUD *__weak weakSelf=self;
-        [UIView animateWithDuration:animationDuration 
-                              delay:0 
-                            options:UIViewAnimationOptionAllowUserInteraction 
+        [UIView animateWithDuration:animationDuration
+                              delay:0
+                            options:UIViewAnimationOptionAllowUserInteraction
                          animations:^{
                              [weakSelf moveToPoint:newCenter rotateAngle:rotateAngle];
                          } completion:NULL];
-    } 
-    
-    else {
+    } else {
         [self moveToPoint:newCenter rotateAngle:rotateAngle];
     }
     
